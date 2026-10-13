@@ -9,6 +9,7 @@ import { ProductivityHeatmap } from '@/components/dashboard/ProductivityHeatmap'
 import { ActivityBreakdown } from '@/components/dashboard/ActivityBreakdown'
 import { EstimatorForm, type ProductividadValues } from '@/components/dashboard/EstimatorForm'
 import { PlanningEstimator } from '@/components/dashboard/PlanningEstimator'
+import { HistoricoView } from '@/components/dashboard/HistoricoView'
 
 interface HeatmapData {
   [key: string]: { label: string; hourly: number[]; total: number }
@@ -57,6 +58,27 @@ interface TurnoInfo {
   parque_max: number
 }
 
+interface HistoricoHorario {
+  n_fechas: number
+  fecha_min: number
+  fecha_max: number
+  parque_maquinas: number
+  factor_eficiencia: number
+  productividad_ponderada: number
+  horas: number[]
+  horas_labels: string[]
+  bultos_promedio_por_hora: number[]
+  bultos_promedio_por_hora_activa: number[]
+  ocupacion_promedio_por_hora: number[]
+  ocupacion_max_por_hora: number[]
+  ocupacion_p95_por_hora: number[]
+  produccion_posible_por_hora: number[]
+  produccion_efectiva_por_hora: number[]
+  utilizacion_por_hora: number[]
+  promedios_turno: Record<string, any>
+  por_dia_semana: Record<string, any>
+}
+
 interface Config {
   parqueMaquinas: number
   horasJornada: number
@@ -74,6 +96,7 @@ export default function Home() {
     heatmap_circuito: HeatmapData
     productividad_actividad: Record<string, ProductividadActividad>
     ocupacion_actividad: Record<string, OcupacionActividad>
+    historico_horario: HistoricoHorario
     config: Config
   } | null>(null)
 
@@ -149,13 +172,18 @@ export default function Home() {
       <main className="flex-1 container mx-auto px-4 py-6 space-y-6">
         <KpiCards resumen={data.resumen} turnos={data.turnos} />
 
-        <Tabs defaultValue="heatmap" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-4">
+        <Tabs defaultValue="historico" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-4">
+            <TabsTrigger value="historico">Histórico</TabsTrigger>
             <TabsTrigger value="heatmap">Mapa de Calor</TabsTrigger>
             <TabsTrigger value="actividades">Por Actividad</TabsTrigger>
             <TabsTrigger value="estimador">Estimador</TabsTrigger>
             <TabsTrigger value="planificacion">Planificación</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="historico" className="space-y-6">
+            <HistoricoView data={data.historico_horario} />
+          </TabsContent>
 
           <TabsContent value="heatmap" className="space-y-6">
             <ProductivityHeatmap
