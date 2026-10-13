@@ -10,6 +10,10 @@ import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Slider } from '@/components/ui/slider'
 import { Separator } from '@/components/ui/separator'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip, ResponsiveContainer, Legend, ComposedChart, ReferenceLine } from 'recharts'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 
 export interface ProductividadValues {
   productividadAct2: number
@@ -17,15 +21,43 @@ export interface ProductividadValues {
   productividadAct4: number
 }
 
+interface DistribucionHoraria {
+  n_fechas: number
+  parque_maquinas: number
+  distribucion_por_actividad: Record<string, {
+    hourly_bultos: number[]
+    pesos: number[]
+    operarios_activos_promedio: number[]
+    total_bultos: number
+    horas_con_actividad: number[]
+  }>
+  distribucion_por_turno: Record<string, any>
+  horas_labels: string[]
+  turnos_horas: Record<string, number[]>
+}
+
 interface Props {
   parqueMaquinas: number
   horasJornada: number
   factorEficiencia: number
   productividad: ProductividadValues
+  distribucionHoraria?: DistribucionHoraria
   onSaveConfig?: (cfg: { parqueMaquinas: number; horasJornada: number; factorEficiencia: number; productividad: ProductividadValues }) => void
 }
 
-export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, productividad, onSaveConfig }: Props) {
+const ACTIVIDAD_LABELS: Record<string, string> = {
+  '2': 'Preparación (AP/BE/PA)',
+  '3': 'Setup / Tiempo muerto',
+  '4': 'Expedición / Otros',
+}
+
+const ACTIVIDAD_COLORS: Record<string, string> = {
+  '2': '#10b981', // emerald
+  '3': '#f59e0b', // amber
+  '4': '#8b5cf6', // violet
+}
+
+export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, productividad, onSaveConfig, distribucionHoraria }: Props) {
   // Estado de inputs
   const [bultosAct2, setBultosAct2] = useState(5000)
   const [bultosAct3, setBultosAct3] = useState(500)
@@ -87,6 +119,73 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
     // Margen (capacidad asignada - objetivo). Si es positivo, hay holgura; si negativo, no alcanza
     const margen = capAsignada - bultosPorHoraObjetivo
 
+    // ============ DISTRIBUCIÓN POR HORA ============
+    // Margen del 10%: se programa el 90% del total planificado, dejando 10% pendiente como buffer
+    // Para cada hora, repartir los bultos de cada actividad según el peso histórico de esa hora
+    // Solo considerar horas activas del histórico de la actividad
+    const MARGEN_PCT = 0.10
+    const FRACCION_A_PROGRAMAR = 1 - MARGEN_PCT // 90% se planifica, 10% queda pendiente
+
+    const distribucionPorHora = ((): Array<{
+      hora: string
+      horaIdx: number
+      act2: number
+      act3: number
+      act4: number
+      total: number
+      pendienteAct2: number
+      pendienteAct3: number
+      pendienteAct4: number
+      pesoAct2: number
+      pesoAct3: number
+      pesoAct4: number
+    }> => {
+      if (!distribucionHoraria) return []
+      const horasLabels = distribucionHoraria.horas_labels
+      return Array.from({ length: 24 }, (_, h) => {
+        const dist = distribucionHoraria.distribucion_por_actividad
+        const peso2 = dist['2']?.pesos[h] || 0
+        const peso3 = dist['3']?.pesos[h] || 0
+        const peso4 = dist['4']?.pesos[h] || 0
+        // Bultos a producir en esta hora (90% del planificado) repartido según peso histórico
+        const act2Prog = Math.round(bultosAct2 * FRACCION_A_PROGRAMAR * peso2)
+        const act3Prog = Math.round(bultosAct3 * FRACCION_A_PROGRAMAR * peso3)
+        const act4Prog = Math.round(bultosAct4 * FRACCION_A_PROGRAMAR * peso4)
+        // Pendiente (10% del planificado) repartido según peso histórico (o como buffer)
+        const pendAct2 = Math.round(bultosAct2 * MARGEN_PCT * peso2)
+        const pendAct3 = Math.round(bultosAct3 * MARGEN_PCT * peso3)
+        const pendAct4 = Math.round(bultosAct4 * MARGEN_PCT * peso4)
+        return {
+          hora: horasLabels[h],
+          horaIdx: h,
+          act2: act2Prog,
+          act3: act3Prog,
+          act4: act4Prog,
+          total: act2Prog + act3Prog + act4Prog,
+          pendienteAct2: pendAct2,
+          pendienteAct3: pendAct3,
+          pendienteAct4: pendAct4,
+          pesoAct2: peso2,
+          pesoAct3: peso3,
+          pesoAct4: peso4,
+        }
+      })
+    })()
+
+    // Totales por actividad
+    const distribucionTotales = distribucionPorHora.reduce(
+      (acc, h) => {
+        acc.act2 += h.act2
+        acc.act3 += h.act3
+        acc.act4 += h.act4
+        acc.pendAct2 += h.pendienteAct2
+        acc.pendAct3 += h.pendienteAct3
+        acc.pendAct4 += h.pendienteAct4
+        return acc
+      },
+      { act2: 0, act3: 0, act4: 0, pendAct2: 0, pendAct3: 0, pendAct4: 0 }
+    )
+
     return {
       totalBultos,
       ops2: Math.ceil(ops2),
@@ -106,8 +205,10 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
       pctCapacidadAsignada,
       pctCapacidadParque,
       margen,
+      distribucionPorHora,
+      distribucionTotales,
     }
-  }, [bultosAct2, bultosAct3, bultosAct4, horasDisponibles, editParque, editJornada, editEficiencia, editProd2, editProd3, editProd4])
+  }, [bultosAct2, bultosAct3, bultosAct4, horasDisponibles, editParque, editJornada, editEficiencia, editProd2, editProd3, editProd4, distribucionHoraria])
 
   return (
     <Card>
@@ -366,6 +467,17 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
                 </div>
               )}
             </div>
+
+            {/* Distribución por hora según histórico, con 10% pendiente */}
+            {distribucionHoraria && result.distribucionPorHora.length > 0 && (
+              <HourlyDistribution
+                data={result.distribucionPorHora}
+                totales={result.distribucionTotales}
+                bultosAct2={bultosAct2}
+                bultosAct3={bultosAct3}
+                bultosAct4={bultosAct4}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="config" className="space-y-4 mt-4">
@@ -453,5 +565,203 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
         </Tabs>
       </CardContent>
     </Card>
+  )
+}
+
+// ====================================================
+// Componente: Distribución por hora
+// ====================================================
+
+interface HourRow {
+  hora: string
+  horaIdx: number
+  act2: number
+  act3: number
+  act4: number
+  total: number
+  pendienteAct2: number
+  pendienteAct3: number
+  pendienteAct4: number
+  pesoAct2: number
+  pesoAct3: number
+  pesoAct4: number
+}
+
+interface HourlyDistProps {
+  data: HourRow[]
+  totales: { act2: number; act3: number; act4: number; pendAct2: number; pendAct3: number; pendAct4: number }
+  bultosAct2: number
+  bultosAct3: number
+  bultosAct4: number
+}
+
+function HourlyDistribution({ data, totales, bultosAct2, bultosAct3, bultosAct4 }: HourlyDistProps) {
+  const [expanded, setExpanded] = useState(true)
+
+  // Filtrar solo horas con alguna actividad
+  const activeRows = data.filter((r) => r.total > 0 || r.pendienteAct2 + r.pendienteAct3 + r.pendienteAct4 > 0)
+  // Pico del día para resaltar
+  const maxTotal = Math.max(...activeRows.map((r) => r.total), 1)
+  // Total pendiente (10%)
+  const totalPendiente = totales.pendAct2 + totales.pendAct3 + totales.pendAct4
+  // Total programado (90%)
+  const totalProgramado = totales.act2 + totales.act3 + totales.act4
+  // Total planificado
+  const totalPlanificado = bultosAct2 + bultosAct3 + bultosAct4
+
+  return (
+    <div className="border-2 rounded-lg p-4 space-y-3 bg-violet-50/30 dark:bg-violet-900/10 border-violet-200 dark:border-violet-900">
+      <button
+        type="button"
+        className="flex items-center justify-between w-full text-left"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-6 bg-violet-500 rounded-sm" />
+          <div>
+            <div className="text-sm font-semibold">Distribución por hora (según histórico) · 90% programado + 10% pendiente</div>
+            <div className="text-xs text-muted-foreground">
+              Reparte los bultos planificados según el patrón histórico de cada hora por actividad, dejando un <strong>10% como pendiente</strong> para absorber imprevistos.
+            </div>
+          </div>
+        </div>
+        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+      </button>
+
+      {expanded && (
+        <>
+          {/* Resumen */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-violet-200 dark:border-violet-900">
+              <div className="text-[10px] uppercase text-muted-foreground">Planificado total</div>
+              <div className="text-xl font-bold">{totalPlanificado.toLocaleString('es-AR')}</div>
+              <div className="text-[10px] text-muted-foreground">bultos</div>
+            </div>
+            <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-emerald-200 dark:border-emerald-900">
+              <div className="text-[10px] uppercase text-muted-foreground">A programar (90%)</div>
+              <div className="text-xl font-bold text-emerald-600">{totalProgramado.toLocaleString('es-AR')}</div>
+              <div className="text-[10px] text-muted-foreground">bultos distribuidos por hora</div>
+            </div>
+            <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-amber-200 dark:border-amber-900">
+              <div className="text-[10px] uppercase text-muted-foreground">Pendiente (10%)</div>
+              <div className="text-xl font-bold text-amber-600">{totalPendiente.toLocaleString('es-AR')}</div>
+              <div className="text-[10px] text-muted-foreground">buffer para imprevistos</div>
+            </div>
+            <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-blue-200 dark:border-blue-900">
+              <div className="text-[10px] uppercase text-muted-foreground">Hora pico</div>
+              <div className="text-xl font-bold text-blue-600">
+                {activeRows.find((r) => r.total === maxTotal)?.hora || '-'}
+              </div>
+              <div className="text-[10px] text-muted-foreground">{maxTotal.toLocaleString('es-AR')} bultos</div>
+            </div>
+            <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-slate-200 dark:border-slate-900">
+              <div className="text-[10px] uppercase text-muted-foreground">Horas activas</div>
+              <div className="text-xl font-bold">{activeRows.length}</div>
+              <div className="text-[10px] text-muted-foreground">de 24 horas</div>
+            </div>
+          </div>
+
+          {/* Gráfico de barras apiladas por hora */}
+          <div>
+            <div className="text-xs font-medium mb-2">Bultos por hora a producir (apilado por actividad)</div>
+            <ResponsiveContainer width="100%" height={300}>
+              <ComposedChart data={activeRows} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="hora" tick={{ fontSize: 10 }} />
+                <YAxis tick={{ fontSize: 10 }} />
+                <RTooltip
+                  formatter={(value: number, name: string) => [value.toLocaleString('es-AR'), name]}
+                  labelStyle={{ fontWeight: 'bold' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="act2" name="Act 2 - Preparación" stackId="a" fill={ACTIVIDAD_COLORS['2']} />
+                <Bar dataKey="act3" name="Act 3 - Setup" stackId="a" fill={ACTIVIDAD_COLORS['3']} />
+                <Bar dataKey="act4" name="Act 4 - Expedición" stackId="a" fill={ACTIVIDAD_COLORS['4']} />
+                <ReferenceLine
+                  y={maxTotal}
+                  stroke="#ef4444"
+                  strokeWidth={1}
+                  strokeDasharray="3 3"
+                  label={{ value: `Pico: ${maxTotal.toLocaleString('es-AR')}`, position: 'right', fill: '#ef4444', fontSize: 10 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Tabla detallada */}
+          <div className="overflow-x-auto max-h-80 overflow-y-auto">
+            <Table>
+              <TableHeader className="sticky top-0 bg-card">
+                <TableRow>
+                  <TableHead className="w-16">Hora</TableHead>
+                  <TableHead className="text-right">Act 2 (Prep)</TableHead>
+                  <TableHead className="text-right">Act 3 (Setup)</TableHead>
+                  <TableHead className="text-right">Act 4 (Exped)</TableHead>
+                  <TableHead className="text-right">Total/hora</TableHead>
+                  <TableHead className="text-right">Pendiente/hora</TableHead>
+                  <TableHead className="text-right w-20">% del total</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeRows.map((r) => {
+                  const pctDelTotal = totalProgramado > 0 ? (r.total / totalProgramado) * 100 : 0
+                  const pendienteTotal = r.pendienteAct2 + r.pendienteAct3 + r.pendienteAct4
+                  return (
+                    <TableRow key={r.horaIdx} className={r.total === maxTotal ? 'bg-amber-50 dark:bg-amber-900/20' : ''}>
+                      <TableCell className="font-mono font-semibold">{r.hora}</TableCell>
+                      <TableCell className="text-right font-mono text-emerald-600">{r.act2 > 0 ? r.act2.toLocaleString('es-AR') : '–'}</TableCell>
+                      <TableCell className="text-right font-mono text-amber-600">{r.act3 > 0 ? r.act3.toLocaleString('es-AR') : '–'}</TableCell>
+                      <TableCell className="text-right font-mono text-violet-600">{r.act4 > 0 ? r.act4.toLocaleString('es-AR') : '–'}</TableCell>
+                      <TableCell className="text-right font-mono font-bold">{r.total.toLocaleString('es-AR')}</TableCell>
+                      <TableCell className="text-right font-mono text-xs text-amber-600">
+                        {pendienteTotal > 0 ? `+${pendienteTotal.toLocaleString('es-AR')}` : '–'}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs">
+                        {pctDelTotal.toFixed(1)}%
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+                <TableRow className="bg-muted/40 font-semibold border-t-2">
+                  <TableCell>TOTAL</TableCell>
+                  <TableCell className="text-right font-mono text-emerald-600">{totales.act2.toLocaleString('es-AR')}</TableCell>
+                  <TableCell className="text-right font-mono text-amber-600">{totales.act3.toLocaleString('es-AR')}</TableCell>
+                  <TableCell className="text-right font-mono text-violet-600">{totales.act4.toLocaleString('es-AR')}</TableCell>
+                  <TableCell className="text-right font-mono font-bold">{totalProgramado.toLocaleString('es-AR')}</TableCell>
+                  <TableCell className="text-right font-mono text-amber-600">{totalPendiente.toLocaleString('es-AR')}</TableCell>
+                  <TableCell className="text-right font-mono">100%</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Resumen por actividad */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            <div className="bg-emerald-50/50 dark:bg-emerald-900/20 p-3 rounded border border-emerald-200 dark:border-emerald-800">
+              <div className="font-semibold text-emerald-700 dark:text-emerald-400">Act 2 - Preparación</div>
+              <div>Planificado: <strong>{bultosAct2.toLocaleString('es-AR')}</strong></div>
+              <div>Programado (90%): <strong>{totales.act2.toLocaleString('es-AR')}</strong></div>
+              <div>Pendiente (10%): <strong>{totales.pendAct2.toLocaleString('es-AR')}</strong></div>
+            </div>
+            <div className="bg-amber-50/50 dark:bg-amber-900/20 p-3 rounded border border-amber-200 dark:border-amber-800">
+              <div className="font-semibold text-amber-700 dark:text-amber-400">Act 3 - Setup</div>
+              <div>Planificado: <strong>{bultosAct3.toLocaleString('es-AR')}</strong></div>
+              <div>Programado (90%): <strong>{totales.act3.toLocaleString('es-AR')}</strong></div>
+              <div>Pendiente (10%): <strong>{totales.pendAct3.toLocaleString('es-AR')}</strong></div>
+            </div>
+            <div className="bg-violet-50/50 dark:bg-violet-900/20 p-3 rounded border border-violet-200 dark:border-violet-800">
+              <div className="font-semibold text-violet-700 dark:text-violet-400">Act 4 - Expedición</div>
+              <div>Planificado: <strong>{bultosAct4.toLocaleString('es-AR')}</strong></div>
+              <div>Programado (90%): <strong>{totales.act4.toLocaleString('es-AR')}</strong></div>
+              <div>Pendiente (10%): <strong>{totales.pendAct4.toLocaleString('es-AR')}</strong></div>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            <strong>¿Cómo se calcula?</strong> Para cada hora del día, el peso histórico (qué % de la actividad se hace en esa hora en promedio) se aplica al 90% del planificado. El 10% restante queda pendiente como buffer para absorber picos de demanda, demoras o reprocesos, repartido también según el patrón horario.
+          </p>
+        </>
+      )}
+    </div>
   )
 }

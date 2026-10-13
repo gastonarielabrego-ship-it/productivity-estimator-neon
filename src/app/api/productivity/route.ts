@@ -21,6 +21,7 @@ export async function GET() {
       circuito_info,
       matriz_circ_act,
       historico_horario,
+      distribucion_horaria,
     ] = await Promise.all([
       readJson('resumen.json'),
       readJson('turnos.json'),
@@ -31,6 +32,7 @@ export async function GET() {
       readJson('circuito_info.json'),
       readJson('matriz_circ_act.json'),
       readJson('historico_horario.json'),
+      readJson('distribucion_horaria.json'),
     ])
 
     const config = {
@@ -54,6 +56,7 @@ export async function GET() {
       circuito_info,
       matriz_circ_act,
       historico_horario,
+      distribucion_horaria,
       config,
     })
   } catch (err) {

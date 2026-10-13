@@ -58,6 +58,21 @@ interface TurnoInfo {
   parque_max: number
 }
 
+interface DistribucionHoraria {
+  n_fechas: number
+  parque_maquinas: number
+  distribucion_por_actividad: Record<string, {
+    hourly_bultos: number[]
+    pesos: number[]
+    operarios_activos_promedio: number[]
+    total_bultos: number
+    horas_con_actividad: number[]
+  }>
+  distribucion_por_turno: Record<string, any>
+  horas_labels: string[]
+  turnos_horas: Record<string, number[]>
+}
+
 interface HistoricoHorario {
   n_fechas: number
   fecha_min: number
@@ -97,6 +112,7 @@ export default function Home() {
     productividad_actividad: Record<string, ProductividadActividad>
     ocupacion_actividad: Record<string, OcupacionActividad>
     historico_horario: HistoricoHorario
+    distribucion_horaria: DistribucionHoraria
     config: Config
   } | null>(null)
 
@@ -213,6 +229,7 @@ export default function Home() {
               factorEficiencia={config.factorEficiencia}
               productividad={config.productividad}
               onSaveConfig={handleSaveConfig}
+              distribucionHoraria={data.distribucion_horaria}
             />
           </TabsContent>
 
