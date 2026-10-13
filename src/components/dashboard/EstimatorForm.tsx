@@ -65,6 +65,28 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
     const bultosPorHoraActual = (cap2 * ops2 + cap3 * ops3 + cap4 * ops4)
     const horasRequeridasActual = bultosPorHoraActual > 0 ? totalBultos / bultosPorHoraActual : Infinity
 
+    // Bultos por hora que se deberían producir (objetivo) = total / horas activas disponibles
+    const bultosPorHoraObjetivo = horasDisponibles > 0 ? totalBultos / horasDisponibles : 0
+
+    // Productividad ponderada calculada con la distribución actual de bultos
+    const totalBultosPorActividad = bultosAct2 + bultosAct3 + bultosAct4
+    const prodPonderadaActual = totalBultosPorActividad > 0
+      ? (bultosAct2 * editProd2 + bultosAct3 * editProd3 + bultosAct4 * editProd4) / totalBultosPorActividad
+      : (editProd2 + editProd3 + editProd4) / 3
+
+    // Capacidad máxima del parque completo (90 máquinas con productividad ponderada × eficiencia)
+    const capMaximaParque = editParque * prodPonderadaActual * editEficiencia
+    // Capacidad con los operarios asignados (la que realmente se puede entregar)
+    const capAsignada = bultosPorHoraActual
+
+    // % de la capacidad asignada que se usaría
+    const pctCapacidadAsignada = capAsignada > 0 ? (bultosPorHoraObjetivo / capAsignada) * 100 : 0
+    // % de la capacidad máxima del parque que se usaría
+    const pctCapacidadParque = capMaximaParque > 0 ? (bultosPorHoraObjetivo / capMaximaParque) * 100 : 0
+
+    // Margen (capacidad asignada - objetivo). Si es positivo, hay holgura; si negativo, no alcanza
+    const margen = capAsignada - bultosPorHoraObjetivo
+
     return {
       totalBultos,
       ops2: Math.ceil(ops2),
@@ -77,6 +99,13 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
       horasRequeridasActual: isFinite(horasRequeridasActual) ? horasRequeridasActual : 0,
       bultosPorHoraParque,
       bultosPorHoraActual,
+      bultosPorHoraObjetivo,
+      capMaximaParque,
+      capAsignada,
+      prodPonderadaActual,
+      pctCapacidadAsignada,
+      pctCapacidadParque,
+      margen,
     }
   }, [bultosAct2, bultosAct3, bultosAct4, horasDisponibles, editParque, editJornada, editEficiencia, editProd2, editProd3, editProd4])
 
@@ -221,6 +250,120 @@ export function EstimatorForm({ parqueMaquinas, horasJornada, factorEficiencia, 
                 <p className="text-xs text-red-600 mt-1">
                   ⚠ Se requieren más operarios que el parque disponible. Reducir volumen o aumentar horas.
                 </p>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Bultos por hora que se deberían producir */}
+            <div className="border-2 rounded-lg p-4 space-y-3 bg-blue-50/30 dark:bg-blue-900/10 border-blue-200 dark:border-blue-900">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-6 bg-blue-500 rounded-sm" />
+                <div>
+                  <div className="text-sm font-semibold">Bultos por hora que se deberían producir</div>
+                  <div className="text-xs text-muted-foreground">
+                    Calculado como <strong>bultos planificados / horas activas disponibles</strong>: {result.totalBultos.toLocaleString('es-AR')} bultos / {horasDisponibles.toFixed(1)} h
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-blue-200 dark:border-blue-900">
+                  <div className="text-[10px] uppercase text-muted-foreground">Objetivo (bultos/hora)</div>
+                  <div className="text-2xl font-bold text-blue-600">{Math.round(result.bultosPorHoraObjetivo).toLocaleString('es-AR')}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    Para cumplir en {horasDisponibles.toFixed(1)}h
+                  </div>
+                </div>
+                <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-emerald-200 dark:border-emerald-900">
+                  <div className="text-[10px] uppercase text-muted-foreground">Capacidad asignada</div>
+                  <div className="text-2xl font-bold text-emerald-600">{Math.round(result.capAsignada).toLocaleString('es-AR')}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    Con {result.opsTotal} operarios asignados
+                  </div>
+                </div>
+                <div className="bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border border-amber-200 dark:border-amber-900">
+                  <div className="text-[10px] uppercase text-muted-foreground">Capacidad máx. parque</div>
+                  <div className="text-2xl font-bold text-amber-600">{Math.round(result.capMaximaParque).toLocaleString('es-AR')}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {editParque} máquinas × {result.prodPonderadaActual.toFixed(1)} b/h × {(editEficiencia * 100).toFixed(0)}%
+                  </div>
+                </div>
+                <div className={`bg-white/60 dark:bg-slate-900/40 rounded-md p-3 border ${result.margen >= 0 ? 'border-emerald-300 dark:border-emerald-700' : 'border-red-300 dark:border-red-700'}`}>
+                  <div className="text-[10px] uppercase text-muted-foreground">Margen vs objetivo</div>
+                  <div className={`text-2xl font-bold ${result.margen >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {result.margen >= 0 ? '+' : ''}{Math.round(result.margen).toLocaleString('es-AR')}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    bultos/h de holgura
+                  </div>
+                </div>
+              </div>
+
+              {/* Comparativa visual: objetivo vs capacidades */}
+              <div className="space-y-2">
+                <div className="text-xs font-medium">Comparativa objetivo vs capacidad</div>
+
+                {/* Objetivo */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Objetivo: {Math.round(result.bultosPorHoraObjetivo).toLocaleString('es-AR')} b/h</span>
+                    <span className="font-mono text-blue-600">{result.pctCapacidadParque.toFixed(1)}% del parque máx.</span>
+                  </div>
+                  <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="absolute h-full bg-blue-500 rounded-full"
+                      style={{ width: `${Math.min(result.pctCapacidadParque, 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Capacidad asignada */}
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs">
+                    <span>Capacidad con {result.opsTotal} operarios: {Math.round(result.capAsignada).toLocaleString('es-AR')} b/h</span>
+                    <span className={`font-mono ${result.pctCapacidadAsignada > 100 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {result.pctCapacidadAsignada.toFixed(1)}% del objetivo
+                    </span>
+                  </div>
+                  <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className={`absolute h-full rounded-full ${result.pctCapacidadAsignada > 100 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                      style={{ width: `${Math.min(result.pctCapacidadAsignada, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Alertas */}
+              {result.bultosPorHoraObjetivo > 0 && (
+                <div className="space-y-1.5">
+                  {result.parquePct > 100 && (
+                    <p className="text-xs text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
+                      ⚠ <strong>Falta capacidad del parque:</strong> se requieren {result.opsTotal} operarios pero el parque solo tiene {editParque} máquinas. {Math.abs(Math.round(result.margen)).toLocaleString('es-AR')} b/h de déficit. Opciones: aumentar horas, reducir bultos, o ampliar el parque.
+                    </p>
+                  )}
+                  {result.pctCapacidadParque > 100 && (
+                    <p className="text-xs text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded border border-red-200 dark:border-red-800">
+                      🚨 <strong>Imposible con parque actual:</strong> el objetivo ({Math.round(result.bultosPorHoraObjetivo).toLocaleString('es-AR')} b/h) supera la capacidad máxima del parque ({Math.round(result.capMaximaParque).toLocaleString('es-AR')} b/h). Demanda {result.pctCapacidadParque.toFixed(0)}% de la capacidad máxima.
+                    </p>
+                  )}
+                  {result.parquePct <= 100 && result.parquePct >= 90 && (
+                    <p className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-2 rounded border border-amber-200 dark:border-amber-800">
+                      ⚡ <strong>Operación al límite:</strong> se usan {result.parquePct.toFixed(0)}% del parque ({result.opsTotal} de {editParque} máquinas). Margen {result.margen >= 0 ? 'de' : 'negativo de'} {Math.abs(Math.round(result.margen)).toLocaleString('es-AR')} b/h. Cualquier imprevisto puede comprometer el cumplimiento.
+                    </p>
+                  )}
+                  {result.parquePct < 90 && result.parquePct >= 50 && (
+                    <p className="text-xs text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-2 rounded border border-blue-200 dark:border-blue-800">
+                      📊 <strong>Plan equilibrado:</strong> usa {result.parquePct.toFixed(0)}% del parque ({result.opsTotal} de {editParque} máquinas). Margen de {Math.round(result.margen).toLocaleString('es-AR')} b/h sobre el objetivo de {Math.round(result.bultosPorHoraObjetivo).toLocaleString('es-AR')} b/h.
+                    </p>
+                  )}
+                  {result.parquePct < 50 && (
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded border border-emerald-200 dark:border-emerald-800">
+                      ✓ <strong>Plan factible:</strong> solo se necesita {result.parquePct.toFixed(0)}% del parque ({result.opsTotal} de {editParque} máquinas). Margen amplio de {Math.round(result.margen).toLocaleString('es-AR')} b/h ({((result.margen / result.capAsignada) * 100).toFixed(0)}% sobre el objetivo). Capacidad sobrante para imprevistos o picos.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </TabsContent>
