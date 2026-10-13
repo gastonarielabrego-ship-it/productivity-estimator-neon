@@ -1,0 +1,162 @@
+{
+  "AP2": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 3284587,
+    "bultos_promedio_por_registro": 215.0,
+    "bultos_mediana": 199.0,
+    "operarios_unicos": 362,
+    "horas_activas_registros": 53910,
+    "registros": 15277
+  },
+  "CH4": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 2101575,
+    "bultos_promedio_por_registro": 512.2,
+    "bultos_mediana": 446.0,
+    "operarios_unicos": 76,
+    "horas_activas_registros": 19409,
+    "registros": 4103
+  },
+  "PA2": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 1838395,
+    "bultos_promedio_por_registro": 109.38,
+    "bultos_mediana": 93.0,
+    "operarios_unicos": 360,
+    "horas_activas_registros": 62664,
+    "registros": 16807
+  },
+  "BE2": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 1693777,
+    "bultos_promedio_por_registro": 130.76,
+    "bultos_mediana": 109.0,
+    "operarios_unicos": 356,
+    "horas_activas_registros": 34581,
+    "registros": 12953
+  },
+  "100": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 1412288,
+    "bultos_promedio_por_registro": 443.56,
+    "bultos_mediana": 429.0,
+    "operarios_unicos": 76,
+    "horas_activas_registros": 17359,
+    "registros": 3184
+  },
+  "AER": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 1016489,
+    "bultos_promedio_por_registro": 66.2,
+    "bultos_mediana": 43.0,
+    "operarios_unicos": 359,
+    "horas_activas_registros": 39442,
+    "registros": 15355
+  },
+  "AP4": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 1006860,
+    "bultos_promedio_por_registro": 134.61,
+    "bultos_mediana": 127.0,
+    "operarios_unicos": 302,
+    "horas_activas_registros": 31071,
+    "registros": 7480
+  },
+  "DP4": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 883515,
+    "bultos_promedio_por_registro": 60.92,
+    "bultos_mediana": 45.0,
+    "operarios_unicos": 354,
+    "horas_activas_registros": 32759,
+    "registros": 14503
+  },
+  "BRA": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 849414,
+    "bultos_promedio_por_registro": 107.92,
+    "bultos_mediana": 101.0,
+    "operarios_unicos": 304,
+    "horas_activas_registros": 31722,
+    "registros": 7871
+  },
+  "PA4": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 517182,
+    "bultos_promedio_por_registro": 68.67,
+    "bultos_mediana": 62.0,
+    "operarios_unicos": 304,
+    "horas_activas_registros": 34848,
+    "registros": 7531
+  },
+  "IMP": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 441484,
+    "bultos_promedio_por_registro": 155.29,
+    "bultos_mediana": 101.0,
+    "operarios_unicos": 76,
+    "horas_activas_registros": 9364,
+    "registros": 2843
+  },
+  "BE4": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 439432,
+    "bultos_promedio_por_registro": 61.25,
+    "bultos_mediana": 54.0,
+    "operarios_unicos": 299,
+    "horas_activas_registros": 21037,
+    "registros": 7174
+  },
+  "200": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 55567,
+    "bultos_promedio_por_registro": 66.07,
+    "bultos_mediana": 42.0,
+    "operarios_unicos": 64,
+    "horas_activas_registros": 1521,
+    "registros": 841
+  },
+  "FST": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 572,
+    "bultos_promedio_por_registro": 40.86,
+    "bultos_mediana": 40.0,
+    "operarios_unicos": 4,
+    "horas_activas_registros": 42,
+    "registros": 14
+  },
+  "XXX": {
+    "actividad_principal": "4",
+    "actividad_label": "Expedicion / Otros circuitos",
+    "bultos_total": 68,
+    "bultos_promedio_por_registro": 1.28,
+    "bultos_mediana": 1.0,
+    "operarios_unicos": 44,
+    "horas_activas_registros": 54,
+    "registros": 53
+  },
+  "300": {
+    "actividad_principal": "2",
+    "actividad_label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_total": 20,
+    "bultos_promedio_por_registro": 4.0,
+    "bultos_mediana": 3.0,
+    "operarios_unicos": 5,
+    "horas_activas_registros": 5,
+    "registros": 5
+  }
+}

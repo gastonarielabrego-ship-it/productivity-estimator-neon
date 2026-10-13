@@ -1,0 +1,68 @@
+{
+  "total_registros": 115994,
+  "total_operarios_unicos": 378,
+  "total_bultos": 15541225,
+  "fecha_min": 20260501,
+  "fecha_max": 20261008,
+  "turnos": [
+    "Noche",
+    "Ma\u00f1ana",
+    "Tarde"
+  ],
+  "actividades": [
+    "Preparacion (circuito AP/BE/PA)",
+    "Expedicion / Otros circuitos",
+    "Tiempo muerto / Setup"
+  ],
+  "circuitos": [
+    "AP2",
+    "BE2",
+    "PA2",
+    "AER",
+    "DP4",
+    "CH4",
+    "BE4",
+    "IMP",
+    "PA4",
+    "BRA",
+    "AP4",
+    "FST",
+    "XXX",
+    "100",
+    "200",
+    "300"
+  ],
+  "parque_maquinas": 90,
+  "horas_por_turno": {
+    "Noche": [
+      23,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "Ma\u00f1ana": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "Tarde": [
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ]
+  }
+}

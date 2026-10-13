@@ -1,0 +1,113 @@
+{
+  "Noche": {
+    "horas": [
+      23,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "horas_labels": [
+      "23:00",
+      "00:00",
+      "01:00",
+      "02:00",
+      "03:00",
+      "04:00",
+      "05:00"
+    ],
+    "bultos_por_hora": [
+      184526,
+      756611,
+      778962,
+      722093,
+      543986,
+      489102,
+      32659
+    ],
+    "bultos_total": 3507939,
+    "operarios_unicos": 153,
+    "max_operarios_activos": 14528,
+    "promedio_operarios_activos": 10592.14,
+    "parque_max": 90
+  },
+  "Ma\u00f1ana": {
+    "horas": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13
+    ],
+    "horas_labels": [
+      "06:00",
+      "07:00",
+      "08:00",
+      "09:00",
+      "10:00",
+      "11:00",
+      "12:00",
+      "13:00"
+    ],
+    "bultos_por_hora": [
+      836168,
+      773660,
+      658130,
+      788692,
+      976934,
+      904447,
+      795266,
+      353263
+    ],
+    "bultos_total": 6086560,
+    "operarios_unicos": 307,
+    "max_operarios_activos": 24304,
+    "promedio_operarios_activos": 19788.25,
+    "parque_max": 90
+  },
+  "Tarde": {
+    "horas": [
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22
+    ],
+    "horas_labels": [
+      "14:00",
+      "15:00",
+      "16:00",
+      "17:00",
+      "18:00",
+      "19:00",
+      "20:00",
+      "21:00",
+      "22:00"
+    ],
+    "bultos_por_hora": [
+      829320,
+      962517,
+      920507,
+      821019,
+      628176,
+      579552,
+      740825,
+      424623,
+      40187
+    ],
+    "bultos_total": 5946726,
+    "operarios_unicos": 321,
+    "max_operarios_activos": 23712,
+    "promedio_operarios_activos": 17481.89,
+    "parque_max": 90
+  }
+}

@@ -1,0 +1,56 @@
+// Prisma schema - Productivity Estimator
+// Compatible con Neon (PostgreSQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Planificacion: bultos planificados por fecha/turno/actividad
+model Planificacion {
+  id              String   @id @default(cuid())
+  fecha           String   // YYYYMMDD
+  turno           String   // Noche | Mañana | Tarde
+  actividad       String   // 2 | 3 | 4
+  actividadLabel  String
+  circuito        String?
+  bultosPlanificados Int
+  prioridad       Int      @default(0) // 0=normal, 1=alta, 2=urgente
+  notas           String?
+  creado          DateTime @default(now())
+  actualizado     DateTime @updatedAt
+
+  @@index([fecha, turno])
+  @@index([actividad])
+}
+
+// Estimacion: estimaciones guardadas
+model Estimacion {
+  id              String   @id @default(cuid())
+  nombre          String
+  bultosPorActividad Json  // { "2": 1000, "3": 200, "4": 1500 }
+  horasDisponibles Float
+  parqueUtilizado Float    // 0-100
+  operariosRequeridos Float
+  horasEstimadas Float
+  bultosTotales   Int
+  creado          DateTime @default(now())
+
+  @@index([nombre])
+}
+
+// Configuracion: ajustes globales del parque
+model Configuracion {
+  id              String   @id @default("global")
+  parqueMaquinas  Int      @default(90)
+  horasJornada    Float    @default(8.0)
+  factorEficiencia Float   @default(0.85) // 85% eficiencia real
+  productividadAct2 Float @default(48.47) // bultos/hora activa por operario
+  productividadAct3 Float @default(5.93)
+  productividadAct4 Float @default(35.07)
+  actualizado     DateTime @updatedAt
+}

@@ -1,0 +1,38 @@
+{
+  "2": {
+    "label": "Preparacion (circuito AP/BE/PA)",
+    "bultos_por_hora_media": 48.47,
+    "bultos_por_hora_mediana": 46.08,
+    "bultos_por_hora_p25": 43.39,
+    "bultos_por_hora_p75": 49.2,
+    "bultos_por_hora_p95": 71.43,
+    "bultos_por_hora_max": 114.51,
+    "operarios_unicos": 366,
+    "bultos_totales": 8284653,
+    "horas_activas_total": 170056
+  },
+  "4": {
+    "label": "Expedicion / Otros circuitos",
+    "bultos_por_hora_media": 35.07,
+    "bultos_por_hora_mediana": 28.79,
+    "bultos_por_hora_p25": 23.95,
+    "bultos_por_hora_p75": 41.28,
+    "bultos_por_hora_p95": 70.57,
+    "bultos_por_hora_max": 153.5,
+    "operarios_unicos": 361,
+    "bultos_totales": 7224611,
+    "horas_activas_total": 216405
+  },
+  "3": {
+    "label": "Tiempo muerto / Setup",
+    "bultos_por_hora_media": 5.93,
+    "bultos_por_hora_mediana": 4.5,
+    "bultos_por_hora_p25": 3.33,
+    "bultos_por_hora_p75": 7.2,
+    "bultos_por_hora_p95": 14.54,
+    "bultos_por_hora_max": 19.53,
+    "operarios_unicos": 267,
+    "bultos_totales": 31961,
+    "horas_activas_total": 3327
+  }
+}
